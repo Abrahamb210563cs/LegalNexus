@@ -1,0 +1,4 @@
+
+Example:
+```json
+{"text": "Summarize the following legal clause:\n<clause text>\n\nAnswer: <summary>"}

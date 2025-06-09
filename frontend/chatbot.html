@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>LegalNexus Chatbot</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: #0f2027;
+            background: linear-gradient(to right, #2c5364, #203a43, #0f2027);
+            color: white;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .box {
+            background: #1e1e2f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        textarea, input {
+            background: #2b2b3d;
+            color: white;
+            border: 1px solid #555;
+            width: 100%;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .btn-ask {
+            background: #12c2e9;
+            background: linear-gradient(to right, #f64f59, #c471ed, #12c2e9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        .btn-instructions {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .btn-instructions:hover {
+            background: #218838;
+        }
+        .instructions-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .instructions-content {
+            background: #1e1e2f;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #555;
+        }
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-btn:hover {
+            color: white;
+        }
+        .instructions-content h3 {
+            color: #12c2e9;
+            margin-bottom: 20px;
+        }
+        .instructions-content h4 {
+            color: #f64f59;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .instructions-content ol {
+            padding-left: 20px;
+        }
+        .instructions-content li {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .instructions-content strong {
+            color: #c471ed;
+        }
+        .instructions-content em {
+            color: #12c2e9;
+            font-style: italic;
+        }
+        .disclaimer {
+            background: #2b2b3d;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f64f59;
+            margin-top: 20px;
+        }
+        .language-dropdown {
+            background: #2b2b3d;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .language-dropdown:focus {
+            outline: none;
+            border-color: #12c2e9;
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .document-type-selector {
+            background: #2b2b3d;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .document-type-selector:focus {
+            outline: none;
+            border-color: #12c2e9;
+        }
+        .upload-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .upload-section label {
+            font-size: 14px;
+            min-width: 100px;
+        }
+        .security-analysis {
+            background: #2b2b3d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #f64f59;
+        }
+        .security-issue {
+            background: #3d2b2b;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+            border-left: 3px solid #ff6b6b;
+        }
+        .security-issue h6 {
+            color: #ff6b6b;
+            margin-bottom: 8px;
+        }
+        .security-fix {
+            color: #51cf66;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        .severity-high {
+            border-left-color: #ff6b6b;
+        }
+        .severity-medium {
+            border-left-color: #ffd43b;
+        }
+        .severity-low {
+            border-left-color: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>LegalNexus Chatbot Demo</h2>
+            <div class="header-controls">
+                <div>
+                    <label for="languageSelect" style="font-size: 14px; margin-right: 8px;">Language:</label>
+                    <select id="languageSelect" class="language-dropdown" onchange="changeLanguage()">
+                        <option value="en">English</option>
+                        <option value="hi">हिंदी (Hindi)</option>
+                        <option value="ml">മലയാളം (Malayalam)</option>
+                        <option value="ta">தமிழ் (Tamil)</option>
+                        <option value="te">తెలుగు (Telugu)</option>
+                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                        <option value="gu">ગુજરાતી (Gujarati)</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                        <option value="mr">मराठी (Marathi)</option>
+                        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    </select>
+                </div>
+                <button class="btn-instructions" onclick="showInstructions()">Instructions</button>
+            </div>
+        </div>
+
+        <!-- Smart Contract Input -->
+        <div class="box">
+            <h5>Upload Your Document</h5>
+            <div class="upload-section">
+                <label for="documentType">Document Type:</label>
+                <select id="documentType" class="document-type-selector" onchange="updateDocumentArea()">
+                    <option value="sol">Smart Contract (.sol)</option>
+                    <option value="pdf">PDF Document (.pdf)</option>
+                    <option value="doc">Word Document (.doc/.docx)</option>
+                    <option value="txt">Text File (.txt)</option>
+                </select>
+            </div>
+            <textarea rows="6" id="contractInput" placeholder="Paste your smart contract code here...">
+function withdraw() public {
+    msg.sender.transfer(address(this).balance);
+}
+            </textarea>
+            <div id="fileUploadArea" style="display: none; margin-top: 10px;">
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" style="background: #2b2b3d; color: white; padding: 10px; border: 1px solid #555; border-radius: 5px; width: 100%;">
+                <p style="font-size: 12px; color: #aaa; margin-top: 8px;">Note: File upload is for demo purposes. In this version, please paste your document content in the text area above.</p>
+            </div>
+        </div>
+
+        <!-- User Qn Box -->
+        <div class="box">
+            <h5>Ask LegalNexus</h5>
+            <input type="text" id="userQuery" placeholder="e.g. Summarize this contract">
+            <button class="btn-ask mt-2" onclick="respond()">Ask</button>
+        </div>
+
+        <!-- Answer Box -->
+        <div class="box" id="responseBox">
+            <h5>Response</h5>
+            <div id="botAnswer">...</div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="instructions-modal">
+        <div class="instructions-content">
+            <span class="close-btn" onclick="closeInstructions()">&times;</span>
+            <h3>How to Use LegalNexus Chatbot</h3>
+            
+            <ol>
+                <li><strong>Start with a Clear Question</strong><br>
+                    Example: <em>"What are my rights if my employer terminates me without notice?"</em>
+                </li>
+                
+                <li><strong>Be Specific About Your Case</strong><br>
+                    Add details like:
+                    <ul>
+                        <li>Your location (state/city)</li>
+                        <li>Type of issue (property, contract, employment, etc.)</li>
+                    </ul>
+                </li>
+                
+                <li><strong>Use Simple Language</strong><br>
+                    Avoid legal jargon unless necessary.<br>
+                    <em>(Instead of "tortious interference," say "someone damaged my business.")</em>
+                </li>
+                
+                <li><strong>Stay Respectful & On-topic</strong><br>
+                    The chatbot responds best to focused legal questions.
+                </li>
+                
+                <li><strong>No Personal Data Required</strong><br>
+                    Don't share names, phone numbers, or personal IDs. The system doesn't store such info.
+                </li>
+                
+                <li><strong>If Unsure, Try Asking:</strong>
+                    <ul>
+                        <li><em>"What documents do I need for a rental agreement?"</em></li>
+                        <li><em>"Is it legal to record a conversation in Kerala?"</em></li>
+                        <li><em>"How to file an RTI request in India?"</em></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="disclaimer">
+                <h4>⚖️ Legal Disclaimer</h4>
+                <p>LegalNexus provides <strong>informational guidance</strong>, not a substitute for a licensed attorney's advice.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'en';
+        
+        const translations = {
+            en: {
+                title: "LegalNexus Chatbot Demo",
+                contractLabel: "Upload Your Document",
+                askLabel: "Ask LegalNexus",
+                responseLabel: "Response",
+                placeholder: "e.g. Summarize this contract",
+                askButton: "Ask",
+                instructionsButton: "Instructions",
+                documentTypeLabel: "Document Type:",
+                placeholders: {
+                    sol: "Paste your smart contract code here...",
+                    pdf: "Paste your PDF document content here...",
+                    doc: "Paste your Word document content here...",
+                    txt: "Paste your text file content here..."
+                }
+            },
+            hi: {
+                title: "लीगलनेक्सस चैटबॉट डेमो",
+                contractLabel: "अपना दस्तावेज़ अपलोड करें",
+                askLabel: "लीगलनेक्सस से पूछें",
+                responseLabel: "उत्तर",
+                placeholder: "उदा. इस कॉन्ट्रैक्ट का सारांश दें",
+                askButton: "पूछें",
+                instructionsButton: "निर्देश",
+                documentTypeLabel: "दस्तावेज़ प्रकार:",
+                placeholders: {
+                    sol: "अपना स्मार्ट कॉन्ट्रैक्ट कोड यहाँ पेस्ट करें...",
+                    pdf: "अपने PDF दस्तावेज़ की सामग्री यहाँ पेस्ट करें...",
+                    doc: "अपने Word दस्तावेज़ की सामग्री यहाँ पेस्ट करें...",
+                    txt: "अपनी टेक्स्ट फ़ाइल की सामग्री यहाँ पेस्ट करें..."
+                }
+            },
+            ml: {
+                title: "ലീഗൽനെക്സസ് ചാറ്റ്ബോട്ട് ഡെമോ",
+                contractLabel: "നിങ്ങളുടെ ഡോക്യുമെന്റ് അപ്‌ലോഡ് ചെയ്യുക",
+                askLabel: "ലീഗൽനെക്സസിനോട് ചോദിക്കുക",
+                responseLabel: "പ്രതികരണം",
+                placeholder: "ഉദാ. ഈ കരാർ സംഗ്രഹിക്കുക",
+                askButton: "ചോദിക്കുക",
+                instructionsButton: "നിർദ്ദേശങ്ങൾ",
+                documentTypeLabel: "ഡോക്യുമെന്റ് തരം:",
+                placeholders: {
+                    sol: "നിങ്ങളുടെ സ്മാർട്ട് കരാർ കോഡ് ഇവിടെ പേസ്റ്റ് ചെയ്യുക...",
+                    pdf: "നിങ്ങളുടെ PDF ഡോക്യുമെന്റിന്റെ ഉള്ളടക്കം ഇവിടെ പേസ്റ്റ് ചെയ്യുക...",
+                    doc: "നിങ്ങളുടെ Word ഡോക്യുമെന്റിന്റെ ഉള്ളടക്കം ഇവിടെ പേസ്റ്റ് ചെയ്യുക...",
+                    txt: "നിങ്ങളുടെ ടെക്സ്റ്റ് ഫയലിന്റെ ഉള്ളടക്കം ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."
+                }
+            }
+        };
+
+        function getSecurityAnalysis() {
+            return `
+                <div class="security-analysis">
+                    <h5 style="color: #ff6b6b; margin-bottom: 15px;">🚨 CRITICAL SECURITY ANALYSIS</h5>
+                    <p><strong>Overall Risk Level:</strong> <span style="color: #ff6b6b;">EXTREMELY HIGH</span></p>
+                    <p>This smart contract contains multiple critical vulnerabilities that make it unsuitable for production use.</p>
+                    
+                    <div class="security-issue severity-high">
+                        <h6>1. Reentrancy Vulnerability in withdraw()</h6>
+                        <p><strong>Issue:</strong> The contract transfers funds before setting the balance to zero, allowing attackers to call back into withdraw() during the transfer and drain all funds.</p>
+                        <p class="security-fix"><strong>Fix:</strong> Use checks-effects-interactions pattern or ReentrancyGuard from OpenZeppelin.</p>
+                    </div>
+                    
+                    <div class="security-issue severity-high">
+                        <h6>2. Arbitrary External Calls in externalCall()</h6>
+                        <p><strong>Issue:</strong> Allows anyone to make the contract call any address without validation, potentially draining funds or exploiting other contracts.</p>
+                        <p class="security-fix"><strong>Fix:</strong> Remove this function or add strict access controls and address validation.</p>
+                    </div>
+                    
+                    <div class="security-issue severity-high">
+                        <h6>3. Missing Access Control</h6>
+                        <p><strong>Issue:</strong> No constructor to set the owner. The owner defaults to address(0), making the reward() function unusable.</p>
+                        <p class="security-fix"><strong>Fix:</strong> Add a constructor to set the initial owner properly.</p>
+                    </div>
+                    
+                    <div class="security-issue severity-medium">
+                        <h6>4. No Input Validation</h6>
+                        <p><strong>Issue:</strong> Functions don't validate addresses or amounts, which could lead to unexpected behavior.</p>
+                        <p class="security-fix"><strong>Fix:</strong> Add require statements to validate inputs.</p>
+                    </div>
+                    
+                    <div style="background: #2b3d2b; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #51cf66;">
+                        <h6 style="color: #51cf66;">Recommended Security Tools:</h6>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Slither - Static analysis tool</li>
+                            <li>MythX - Comprehensive security platform</li>
+                            <li>Securify - ETH Zurich security scanner</li>
+                            <li>Oyente - Symbolic execution tool</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #3d2b2b; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ff6b6b;">
+                        <p style="color: #ff6b6b; font-weight: bold;">⚠️ WARNING: This contract would lose ALL funds if deployed to mainnet. Do NOT use in production!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDocumentArea() {
+            const documentType = document.getElementById('documentType').value;
+            const lang = translations[currentLanguage] || translations.en;
+            const contractInput = document.getElementById('contractInput');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            
+            // Update placeholder based on document type
+            contractInput.placeholder = lang.placeholders[documentType];
+            
+            // Show/hide file upload area based on document type
+            if (documentType === 'sol') {
+                fileUploadArea.style.display = 'none';
+                contractInput.style.display = 'block';
+            } else {
+                fileUploadArea.style.display = 'block';
+                contractInput.style.display = 'block';
+            }
+            
+            // Update file input accept attribute
+            const fileInput = document.getElementById('fileInput');
+            switch(documentType) {
+                case 'pdf':
+                    fileInput.accept = '.pdf';
+                    break;
+                case 'doc':
+                    fileInput.accept = '.doc,.docx';
+                    break;
+                case 'txt':
+                    fileInput.accept = '.txt';
+                    break;
+                default:
+                    fileInput.accept = '.pdf,.doc,.docx,.txt';
+            }
+        }
+
+        function changeLanguage() {
+            currentLanguage = document.getElementById('languageSelect').value;
+            updateUI();
+            updateDocumentArea();
+        }
+
+        function updateUI() {
+            const lang = translations[currentLanguage] || translations.en;
+            
+            document.querySelector('h2').textContent = lang.title;
+            document.querySelector('.box:nth-child(2) h5').textContent = lang.contractLabel;
+            document.querySelector('.box:nth-child(3) h5').textContent = lang.askLabel;
+            document.querySelector('#responseBox h5').textContent = lang.responseLabel;
+            document.getElementById('userQuery').placeholder = lang.placeholder;
+            document.querySelector('.btn-ask').textContent = lang.askButton;
+            document.querySelector('.btn-instructions').textContent = lang.instructionsButton;
+            document.querySelector('.upload-section label').textContent = lang.documentTypeLabel;
+        }
+
+        function respond() {
+            const q = document.getElementById("userQuery").value.toLowerCase();
+            const contractCode = document.getElementById("contractInput").value;
+            let answer = "";
+
+            if (q.includes("summarize") || q.includes("summary") || q.includes("analyze") || q.includes("security") || q.includes("audit")) {
+                // Check if it's a smart contract
+                if (contractCode.includes("function") && contractCode.includes("public") || contractCode.includes("contract")) {
+                    answer = getSecurityAnalysis();
+                } else {
+                    answer = "This appears to be a document rather than a smart contract. For smart contract security analysis, please paste Solidity code and ask for a summary.";
+                }
+            } else if (q.includes("withdrawal") || q.includes("withdraw")) {
+                answer = `<div class="security-issue severity-high">
+                    <h6>Withdrawal Function Analysis</h6>
+                    <p>The withdraw() function in this contract is extremely dangerous. It allows any user to withdraw funds and is vulnerable to reentrancy attacks. An attacker could drain all contract funds by calling this function recursively before the balance is set to zero.</p>
+                    <p class="security-fix"><strong>Immediate Fix Needed:</strong> Implement checks-effects-interactions pattern and use ReentrancyGuard.</p>
+                </div>`;
+            } else if (q.includes("risk") || q.includes("vulnerability") || q.includes("exploit")) {
+                answer = `<div class="security-analysis">
+                    <h5 style="color: #ff6b6b;">High-Risk Issues Detected:</h5>
+                    <ul style="color: #ff6b6b; margin: 10px 0; padding-left: 20px;">
+                        <li>Reentrancy vulnerability in withdraw()</li>
+                        <li>Arbitrary external calls without validation</li>
+                        <li>Missing owner initialization</li>
+                        <li>No input validation on critical functions</li>
+                    </ul>
+                    <p style="color: #ff6b6b; font-weight: bold;">This contract would be flagged as CRITICAL RISK by all major security scanners.</p>
+                </div>`;
+            } else if (q.includes("fix") || q.includes("solution") || q.includes("secure")) {
+                answer = `<div style="background: #2b3d2b; padding: 15px; border-radius: 8px; border-left: 4px solid #51cf66;">
+                    <h6 style="color: #51cf66;">Security Fixes Required:</h6>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li><strong>Add ReentrancyGuard:</strong> Use OpenZeppelin's ReentrancyGuard modifier</li>
+                        <li><strong>Implement proper withdrawal pattern:</strong> Update state before external calls</li>
+                        <li><strong>Add constructor:</strong> Set owner properly during deployment</li>
+                        <li><strong>Remove dangerous functions:</strong> Remove or secure the externalCall() function</li>
+                        <li><strong>Add input validation:</strong> Validate all function parameters</li>
+                    </ol>
+                </div>`;
+            } else {
+                answer = "Please ask about smart contract security analysis, summarization, or specific vulnerabilities. Try typing 'summarize' to get a full security analysis.";
+            }
+
+            document.getElementById("botAnswer").innerHTML = answer;
+        }
+
+        function showInstructions() {
+            document.getElementById("instructionsModal").style.display = "block";
+        }
+
+        function closeInstructions() {
+            document.getElementById("instructionsModal").style.display = "none";
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById("instructionsModal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Initialize UI on page load
+        window.onload = function() {
+            updateUI();
+            updateDocumentArea();
+        }
+    </script>
+</body>
+</html>
